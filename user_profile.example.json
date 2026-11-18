@@ -1,4 +1,3 @@
-$json = @'
 {
   "personal_info": {
     "name": "Your Name",
@@ -47,5 +46,3 @@ $json = @'
   "experience_level": ["Fresher", "Entry-level", "Junior"],
   "excluded_roles": ["Senior Developer", "Lead Developer", "Director", "VP", "CTO"]
 }
-'@
-[System.IO.File]::WriteAllText("$PWD\user_profile.example.json", $json, (New-Object System.Text.UTF8Encoding $false))
