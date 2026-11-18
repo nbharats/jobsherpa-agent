@@ -1,0 +1,17 @@
+# Virtual environment
+.sherpa/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Secrets
+.env
+
+# Runtime files
+logs/
+data/*.db
+*.log
+
+# Editor settings
+.vscode/
