@@ -15,3 +15,5 @@ data/*.db
 
 # Editor settings
 .vscode/
+user_profile.json
+.sherpa/

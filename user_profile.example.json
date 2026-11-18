@@ -1,0 +1,51 @@
+$json = @'
+{
+  "personal_info": {
+    "name": "Your Name",
+    "email": "you@example.com",
+    "phone": "+91-0000000000",
+    "location": "City, Country",
+    "linkedin": "https://linkedin.com/in/your-handle",
+    "github": "https://github.com/your-handle",
+    "portfolio": "",
+    "resume_path": "data/resume.pdf"
+  },
+  "education": [
+    {
+      "degree": "B.Tech Computer Science and Engineering",
+      "institution": "Your College",
+      "start_year": 2021,
+      "graduation_year": 2025
+    }
+  ],
+  "skills": {
+    "programming_languages": ["Python", "JavaScript", "SQL"],
+    "frontend": ["React.js", "HTML5", "CSS3"],
+    "backend": ["Flask", "REST APIs"],
+    "database": ["MySQL", "SQLite"],
+    "tools": ["Git", "GitHub"],
+    "ai_ml": ["Machine Learning", "Generative AI"]
+  },
+  "experience": [
+    {
+      "organization": "Example Company",
+      "role": "Your Role",
+      "start_date": "2024-01",
+      "end_date": "2024-04",
+      "location": "Remote"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Example Project",
+      "description": "One sentence on what it does.",
+      "technologies": ["Python", "Flask"]
+    }
+  ],
+  "target_roles": ["Python Developer", "Full Stack Developer", "Junior AI Engineer"],
+  "preferred_job_type": ["Full-time", "Internship"],
+  "experience_level": ["Fresher", "Entry-level", "Junior"],
+  "excluded_roles": ["Senior Developer", "Lead Developer", "Director", "VP", "CTO"]
+}
+'@
+[System.IO.File]::WriteAllText("$PWD\user_profile.example.json", $json, (New-Object System.Text.UTF8Encoding $false))
