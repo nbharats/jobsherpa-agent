@@ -13,7 +13,7 @@ from agent.utils import CriticalError, safe_node
 
 logger = logging.getLogger(__name__)
 
-MOCK_JOB_COUNT = 3        
+
 MOCK_DRIP_CONTACTS = 2
 AUTO_APPLY_PORTALS = {"stub"}  
 
@@ -41,28 +41,6 @@ def send_drip_email(contact: str) -> None:
 def load_memory(state: AgentState) -> dict[str, Any]:
     logger.info("load_memory (stub)")
     return {"memory_context": "stub: no previous sessions"}
-
-
-@safe_node
-def scrape_jobs(state: AgentState) -> dict[str, Any]:
-    logger.info("scrape (stub)")
-    jobs = [
-        {
-            "url": f"https://example.com/jobs/{i}",
-            "title": f"Stub Job {i}",
-            "company": "Acme",
-            "portal": "stub" if i % 2 == 0 else "remoteok",
-        }
-        for i in range(MOCK_JOB_COUNT)
-    ]
-    return {"raw_jobs": jobs, "total_scraped": len(jobs)}
-
-
-@safe_node
-def filter_jobs(state: AgentState) -> dict[str, Any]:
-    logger.info("filter (stub)")
-    new = state["raw_jobs"]
-    return {"new_jobs": new, "total_new": len(new)}
 
 
 @safe_node
