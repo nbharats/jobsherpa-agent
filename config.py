@@ -57,6 +57,9 @@ def get_int(name: str, default: int) -> int:
             f"{name} must contain a valid integer."
         ) from exc
 
+CACHE_DIR = DATA_DIR / "cache"
+SCRAPER_TIMEOUT_SECONDS = get_int("SCRAPER_TIMEOUT_SECONDS", 20)
+CACHE_TTL_HOURS = get_int("CACHE_TTL_HOURS", 12)
 
 def get_list(name: str, default: str = "") -> list[str]:
     """Read a comma-separated environment variable as a list."""
@@ -145,7 +148,7 @@ EMAIL_DELAY_MAX_SECONDS = get_int("EMAIL_DELAY_MAX_SECONDS", 30)
 SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "09:00")
 TIMEZONE = os.getenv("TIMEZONE", "Asia/Kolkata")
 BLACKLIST_KEYWORDS = get_list("BLACKLIST_KEYWORDS", "java,php,wordpress,sales,bpo")
-WHITELIST_KEYWORDS = get_list("WHITELIST_KEYWORDS", "python,react,flask,javascript,full stack,ai,ml")
+WHITELIST_KEYWORDS = get_list("WHITELIST_KEYWORDS", "python,react,flask,javascript,full stack,ai,ml, software engineer,developer,frontend,backend,machine learning")
 MAX_YEARS_REQUIRED = get_int("MAX_YEARS_REQUIRED", 2)
 APOLLO_API_KEY = os.getenv("APOLLO_API_KEY", "")
 SNOV_API_KEY = os.getenv("SNOV_API_KEY", "")

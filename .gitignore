@@ -17,3 +17,7 @@ data/*.db
 .vscode/
 user_profile.json
 .sherpa/
+
+data/cache/
+
+data/cache/
