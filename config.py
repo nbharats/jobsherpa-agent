@@ -148,7 +148,16 @@ EMAIL_DELAY_MAX_SECONDS = get_int("EMAIL_DELAY_MAX_SECONDS", 30)
 SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "09:00")
 TIMEZONE = os.getenv("TIMEZONE", "Asia/Kolkata")
 BLACKLIST_KEYWORDS = get_list("BLACKLIST_KEYWORDS", "java,php,wordpress,sales,bpo")
-WHITELIST_KEYWORDS = get_list("WHITELIST_KEYWORDS", "python,react,flask,javascript,full stack,ai,ml, software engineer,developer,frontend,backend,machine learning")
+WHITELIST_KEYWORDS = get_list(
+    "WHITELIST_KEYWORDS",
+    "python,react,flask,javascript,full stack,software engineer,developer,"
+    "frontend,backend,ai,ml,machine learning",
+)
+SENIOR_KEYWORDS = get_list(
+    "SENIOR_KEYWORDS",
+    "senior,sr,lead,principal,staff,director,vp,vice president,"
+    "head of,chief,cto,manager,architect",
+)
 MAX_YEARS_REQUIRED = get_int("MAX_YEARS_REQUIRED", 2)
 APOLLO_API_KEY = os.getenv("APOLLO_API_KEY", "")
 SNOV_API_KEY = os.getenv("SNOV_API_KEY", "")
