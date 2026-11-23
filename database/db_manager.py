@@ -252,7 +252,7 @@ def add_hr_contact(company, company_domain, hr_email, hr_name=None,
 def get_hr_contacts(company_domain):
     with get_connection() as conn:
         rows = conn.execute(
-            "SELECT * FROM hr_contacts WHERE company_domain = ?",
+            "SELECT * FROM hr_contacts WHERE company_domain = ? ORDER BY id",
             (company_domain.strip().lower(),),
         ).fetchall()
         return [dict(r) for r in rows]

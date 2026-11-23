@@ -165,10 +165,6 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 GEMINI_FALLBACK_MODELS = get_list("GEMINI_FALLBACK_MODELS", "")
 
 
-# --------------------------------------------------
-# Gmail settings
-# --------------------------------------------------
-
 GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS", "")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 
@@ -180,18 +176,12 @@ IMAP_PORT = get_int("IMAP_PORT", 993)
 
 REPORT_EMAIL = os.getenv("REPORT_EMAIL", "")
 
-
-# --------------------------------------------------
-# Runtime directories
-# --------------------------------------------------
+HR_EMAIL_LOCALPARTS = get_list("HR_EMAIL_LOCALPARTS", "hr,careers,jobs")
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# --------------------------------------------------
-# Basic configuration validation
-# --------------------------------------------------
 
 def validate_basic_config() -> None:
     """Check basic settings without requiring API credentials."""
