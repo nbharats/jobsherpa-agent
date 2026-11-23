@@ -3,6 +3,8 @@
 Scrapers are faked and the database is a temporary file, so nothing here
 touches the network or your real data.
 """
+import json
+import re
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
@@ -10,7 +12,7 @@ from unittest.mock import patch
 
 import config
 from agent.graph import build_graph, route_after_filter
-from agent.nodes import scrape_node, stubs
+from agent.nodes import scrape_node, score_node, stubs
 from agent.state import make_initial_state
 from agent.utils import CriticalError, safe_node
 from database import db_manager as db
@@ -41,9 +43,17 @@ def fake_jobs(count: int) -> list[dict]:
     ]
 
 
+def fake_gemini(prompt: str, **kwargs) -> str:
+    """Deterministic stand-in for Gemini: scores 10, 9.5, 9, ... in job order."""
+    ids = list(dict.fromkeys(re.findall(r'"id": "(j\d+)"', prompt)))
+    return json.dumps({"scores": [
+        {"id": job_id, "score": round(10 - 0.5 * i, 1), "reason": "fake"}
+        for i, job_id in enumerate(ids)]})
+
+
 @contextmanager
 def pipeline_env(job_count: int = 3, fail_scraper: bool = False, **overrides):
-    """Fake scrapers, a temporary database and fixed filter rules."""
+    """Fake scrapers, fake Gemini, a temporary database and fixed filter rules."""
     def good():
         return fake_jobs(job_count)
 
@@ -58,7 +68,8 @@ def pipeline_env(job_count: int = 3, fail_scraper: bool = False, **overrides):
             patch.object(config, "DATABASE_PATH", Path(tmp) / "t.db"), \
             patch.multiple(config, **{**RULES, **overrides}), \
             patch.object(scrape_node, "run_all_scrapers",
-                         lambda: run_all_scrapers(scrapers)):
+                         lambda: run_all_scrapers(scrapers)), \
+            patch.object(score_node, "generate_text", fake_gemini):
         db.init_db()
         yield
 

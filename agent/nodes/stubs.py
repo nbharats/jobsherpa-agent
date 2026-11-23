@@ -44,22 +44,6 @@ def load_memory(state: AgentState) -> dict[str, Any]:
 
 
 @safe_node
-def score_jobs(state: AgentState) -> dict[str, Any]:
-    """Score every job, then shortlist the best TOP_N_JOBS above the threshold.
-
-    The daily application limit is NOT applied here; apply_jobs enforces it.
-    """
-    logger.info("score (stub)")
-    scored = [
-        {**job, "relevance_score": round(10 - 0.5 * i, 1)}
-        for i, job in enumerate(state["new_jobs"])
-    ]
-    scored.sort(key=lambda j: j["relevance_score"], reverse=True)
-    shortlist = [j for j in scored if j["relevance_score"] >= config.JOB_SCORE_THRESHOLD]
-    return {"scored_jobs": scored, "jobs_to_apply": shortlist[: config.TOP_N_JOBS]}
-
-
-@safe_node
 def apply_jobs(state: AgentState) -> dict[str, Any]:
     """Attempt auto-apply (up to MAX_APPLY_PER_DAY); route other portals to email."""
     logger.info("apply (stub)")
