@@ -2,7 +2,7 @@
 import logging
 from collections.abc import Callable
 
-from scrapers import remoteok_scraper
+from scrapers import remoteok_scraper, remotive_scraper, arbeitnow_scraper
 from scrapers.common import Job
 
 logger = logging.getLogger(__name__)
@@ -11,6 +11,8 @@ ScrapeFunc = Callable[[], list[Job]]
 
 SCRAPERS: dict[str, ScrapeFunc] = {
     "remoteok": remoteok_scraper.scrape,
+    "remotive": remotive_scraper.scrape,
+    "arbeitnow": arbeitnow_scraper.scrape,
 }
 
 

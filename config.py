@@ -103,7 +103,7 @@ APP_NAME = "JobSherpa"
 APP_ENV = os.getenv("APP_ENV", "development")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
-GEMINI_MAX_RPM = get_int("GEMINI_MAX_RPM", 12)
+GEMINI_MAX_RPM = get_int("GEMINI_MAX_RPM", 8)
 EMAIL_DELAY_MIN_SECONDS = get_int("EMAIL_DELAY_MIN_SECONDS", 15)
 EMAIL_DELAY_MAX_SECONDS = get_int("EMAIL_DELAY_MAX_SECONDS", 30)
 SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "09:00")
@@ -118,15 +118,8 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 DRY_RUN = get_bool("DRY_RUN", True)
 
 
-# --------------------------------------------------
-# Candidate profile
-# --------------------------------------------------
-
 USER_PROFILE = load_user_profile()
 
-# --------------------------------------------------
-# Job search settings
-# --------------------------------------------------
 
 JOB_LOCATION = os.getenv("JOB_LOCATION", "India")
 
@@ -142,7 +135,7 @@ TOP_N_JOBS = get_int("TOP_N_JOBS", 10)
 MAX_APPLY_PER_DAY = get_int("MAX_APPLY_PER_DAY", 5)
 MAX_COLD_EMAILS_PER_DAY = get_int("MAX_COLD_EMAILS_PER_DAY", 3)
 
-GEMINI_MAX_RPM = get_int("GEMINI_MAX_RPM", 12)
+GEMINI_MAX_RPM = get_int("GEMINI_MAX_RPM", 8)
 EMAIL_DELAY_MIN_SECONDS = get_int("EMAIL_DELAY_MIN_SECONDS", 15)
 EMAIL_DELAY_MAX_SECONDS = get_int("EMAIL_DELAY_MAX_SECONDS", 30)
 SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "09:00")
@@ -168,7 +161,8 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 # --------------------------------------------------
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+GEMINI_FALLBACK_MODELS = get_list("GEMINI_FALLBACK_MODELS", "")
 
 
 # --------------------------------------------------
