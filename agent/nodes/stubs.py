@@ -37,11 +37,6 @@ def send_drip_email(contact: str) -> None:
 
 # ---------- nodes ----------
 
-@safe_node
-def load_memory(state: AgentState) -> dict[str, Any]:
-    logger.info("load_memory (stub)")
-    return {"memory_context": "stub: no previous sessions"}
-
 
 @safe_node
 def apply_jobs(state: AgentState) -> dict[str, Any]:
@@ -126,12 +121,6 @@ def hr_drip_campaign(state: AgentState) -> dict[str, Any]:
         except Exception:
             logger.warning("Drip email failed for %s", contact, exc_info=True)
     return {"drip_emails_sent": sent}
-
-
-@safe_node
-def save_memory(state: AgentState) -> dict[str, Any]:
-    logger.info("save_memory (stub)")
-    return {"memory_saved": True}
 
 
 @safe_node

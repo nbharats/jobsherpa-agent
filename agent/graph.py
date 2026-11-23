@@ -1,7 +1,7 @@
 """LangGraph definition: wires the nodes into the JobSherpa pipeline."""
 from langgraph.graph import END, START, StateGraph
 
-from agent.nodes import filter_node, scrape_node, score_node, stubs
+from agent.nodes import filter_node, memory_node, scrape_node, score_node, stubs
 from agent.state import AgentState
 
 
@@ -17,14 +17,14 @@ def build_graph():
     """Build and compile the pipeline. Returns a runnable compiled graph."""
     graph = StateGraph(AgentState)
 
-    graph.add_node("load_memory", stubs.load_memory)
+    graph.add_node("load_memory", memory_node.load_memory)
     graph.add_node("scrape", scrape_node.scrape_jobs)
     graph.add_node("filter", filter_node.filter_jobs)
     graph.add_node("score", score_node.score_jobs)
     graph.add_node("apply", stubs.apply_jobs)
     graph.add_node("email", stubs.send_emails)
     graph.add_node("hr_drip", stubs.hr_drip_campaign)
-    graph.add_node("save_memory", stubs.save_memory)
+    graph.add_node("save_memory", memory_node.save_memory)
     graph.add_node("report", stubs.build_report)
 
     graph.add_edge(START, "load_memory")

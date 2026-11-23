@@ -151,6 +151,14 @@ def get_job(job_hash):
         ).fetchone()
         return dict(row) if row else None
 
+def count_jobs_by_status() -> dict[str, int]:
+    """Return {status: number of jobs} for every status in the table."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT status, COUNT(*) AS n FROM applications GROUP BY status"
+        ).fetchall()
+        return {row["status"]: row["n"] for row in rows}
+
 def update_job_score(job_hash, score):
     """Returns True if a job was updated, False if the hash is unknown."""
     with get_connection() as conn:

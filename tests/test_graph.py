@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import config
 from agent.graph import build_graph, route_after_filter
-from agent.nodes import scrape_node, score_node, stubs
+from agent.nodes import memory_node, scrape_node, score_node, stubs
 from agent.state import make_initial_state
 from agent.utils import CriticalError, safe_node
 from database import db_manager as db
@@ -29,7 +29,7 @@ RULES = dict(
     SENIOR_KEYWORDS=["senior", "lead", "vp", "manager"],
     MAX_YEARS_REQUIRED=2,
 )
-# 8 jobs: 7 pass the score threshold, shortlist 5, apply limit 2, email limit 1
+
 BUSY = dict(JOB_SCORE_THRESHOLD=7, TOP_N_JOBS=5,
             MAX_APPLY_PER_DAY=2, MAX_COLD_EMAILS_PER_DAY=1)
 
@@ -99,7 +99,9 @@ def test_normal_run():
         order, final = run_pipeline(build_graph())
     assert order == FULL
     assert final["total_scraped"] == 3 and final["total_new"] == 3
-    assert final["memory_saved"] and final["report_html"]
+    assert final["report_html"]
+    assert final["memory_saved"] is False
+    assert "No previous runs recorded." in final["memory_context"]
     assert final["errors"] == []
 
 
@@ -146,7 +148,7 @@ def test_critical_error_stops_the_run():
     def broken_memory(state):
         raise CriticalError("database unavailable")
 
-    with patch.object(stubs, "load_memory", broken_memory):
+    with patch.object(memory_node, "load_memory", broken_memory):
         try:
             run_pipeline(build_graph())
         except CriticalError:
@@ -179,6 +181,14 @@ def test_limits_are_respected():
     assert email.call_count == 1                         # MAX_COLD_EMAILS_PER_DAY
     assert drip.call_count == stubs.MOCK_DRIP_CONTACTS
 
+
+def test_real_run_saves_daily_stats():
+    with pipeline_env(3), external_mocks():
+        order, final = run_pipeline(build_graph(), dry_run=False)
+        (row,) = db.get_recent_stats()
+    assert final["memory_saved"] is True
+    assert row["total_scraped"] == 3 and row["total_new"] == 3
+    
 
 TESTS = [
     test_normal_run,
