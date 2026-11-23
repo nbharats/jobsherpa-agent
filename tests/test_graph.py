@@ -188,7 +188,7 @@ def test_real_run_saves_daily_stats():
         (row,) = db.get_recent_stats()
     assert final["memory_saved"] is True
     assert row["total_scraped"] == 3 and row["total_new"] == 3
-    
+
 
 TESTS = [
     test_normal_run,
@@ -200,6 +200,7 @@ TESTS = [
     test_critical_error_stops_the_run,
     test_dry_run_prevents_external_actions,
     test_limits_are_respected,
+    test_real_run_saves_daily_stats,
 ]
 
 
