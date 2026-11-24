@@ -326,4 +326,27 @@ def mark_drip_result(email, status):
             (status, status, _now(), normalise_email(email)),
         )
         return cur.rowcount > 0
-    
+
+def get_drip_contact(email):
+    """Return a drip contact as a dict, or None if the email is unknown."""
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM drip_outreach WHERE email = ?", (normalise_email(email),)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def hr_email_already_contacted(hr_email):
+    """True if this address already received a cold email or a drip email."""
+    address = normalise_email(hr_email)
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT 1 FROM applications WHERE hr_email = ? AND email_sent = 1 LIMIT 1",
+            (address,),
+        ).fetchone()
+        if row is None:
+            row = conn.execute(
+                "SELECT 1 FROM drip_outreach WHERE email = ? AND status = 'sent' LIMIT 1",
+                (address,),
+            ).fetchone()
+        return row is not None

@@ -21,3 +21,6 @@ user_profile.json
 data/cache/
 
 data/cache/
+
+data/*.pdf
+data/hr_contacts.csv

@@ -120,6 +120,13 @@ DRY_RUN = get_bool("DRY_RUN", True)
 
 USER_PROFILE = load_user_profile()
 
+EMAIL_REDIRECT_TO = os.getenv("EMAIL_REDIRECT_TO", "").strip()
+DAILY_EMAIL_LIMIT = get_int("DAILY_EMAIL_LIMIT", 20)
+DRIP_BATCH_SIZE = get_int("DRIP_BATCH_SIZE", 3)
+HR_CSV_PATH = BASE_DIR / os.getenv("HR_CSV_PATH", "data/hr_contacts.csv")
+RESUME_PATH = BASE_DIR / (
+    USER_PROFILE.get("personal_info", {}).get("resume_path") or "data/resume.pdf"
+)
 
 JOB_LOCATION = os.getenv("JOB_LOCATION", "India")
 
