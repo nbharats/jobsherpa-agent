@@ -242,6 +242,13 @@ def test_drip_failure_and_missing_credentials():
         assert any("credentials" in e for e in update["errors"])
         assert db.get_drip_contact("asha@acme.com")["status"] == "pending"
 
+def test_provided_hr_email_skips_lookup():
+    sample = {**job(1), "hr_email": "Careers@Nimbus-Demo.example.org"}
+    with email_env() as m:
+        update = email_node.send_emails(cold_state([sample], dry_run=False))
+        assert m.finder.call_count == 0
+        assert m.cold.call_args.args[0] == "careers@nimbus-demo.example.org"
+        assert update["total_emailed"] == 1
 
 TESTS = [
     test_dry_run_writes_and_sends_nothing,
@@ -258,6 +265,7 @@ TESTS = [
     test_drip_respects_daily_budget,
     test_drip_dry_run_skips_handled_contacts,
     test_drip_failure_and_missing_credentials,
+    test_provided_hr_email_skips_lookup,
 ]
 
 

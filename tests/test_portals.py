@@ -77,7 +77,7 @@ def test_parsers_reject_bad_responses():
 
 
 def test_registry_lists_three_portals():
-    assert set(SCRAPERS) == {"remoteok", "remotive", "arbeitnow"}
+    assert set(SCRAPERS) == {"remoteok", "remotive", "arbeitnow", "demo"}
 
 
 TESTS = [

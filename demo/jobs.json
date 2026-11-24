@@ -1,0 +1,65 @@
+[
+  {
+    "url": "https://demo.jobsherpa.example/jobs/101",
+    "title": "Junior Python Developer",
+    "company": "Nimbus Labs (sample)",
+    "portal": "demo",
+    "location": "Remote (India)",
+    "posted_date": "2026-11-24",
+    "tags": ["python", "flask", "sql"],
+    "description": "SAMPLE LISTING FOR DEMONSTRATION. We are hiring a junior Python developer to build and test Flask REST APIs and work with SQL databases. 0-1 years of experience. Freshers welcome. Remote within India."
+  },
+  {
+    "url": "https://demo.jobsherpa.example/jobs/102",
+    "title": "Python Flask Developer (Fresher)",
+    "company": "Orchid Software (sample)",
+    "portal": "demo",
+    "location": "Remote (India)",
+    "posted_date": "2026-11-24",
+    "tags": ["python", "flask", "mysql"],
+    "description": "SAMPLE LISTING FOR DEMONSTRATION. Build web features with Python, Flask and MySQL in a small team. Git workflow, code reviews and mentoring provided. 0-2 years of experience."
+  },
+  {
+    "url": "https://demo.jobsherpa.example/jobs/103",
+    "title": "Associate Software Engineer - Python",
+    "company": "Pixel Forge (sample)",
+    "portal": "demo",
+    "location": "Remote (India)",
+    "posted_date": "2026-11-23",
+    "tags": ["python", "rest-api", "git"],
+    "description": "SAMPLE LISTING FOR DEMONSTRATION. Work on backend services written in Python, write unit tests and fix bugs. 0-1 years of experience. Recent graduates are encouraged to apply."
+  },
+  {
+    "url": "https://demo.jobsherpa.example/jobs/104",
+    "title": "Full Stack Developer (React + Flask), Entry Level",
+    "company": "Lumen Works (sample)",
+    "portal": "demo-board",
+    "hr_email": "careers@lumen-demo.example.org",
+    "location": "Remote (India)",
+    "posted_date": "2026-11-23",
+    "tags": ["react", "flask", "javascript"],
+    "description": "SAMPLE LISTING FOR DEMONSTRATION. Build user interfaces in React and APIs in Flask for an internal tools product. 0-1 years of experience. Freshers welcome."
+  },
+  {
+    "url": "https://demo.jobsherpa.example/jobs/105",
+    "title": "Junior AI/ML Engineer",
+    "company": "Quanta Bay (sample)",
+    "portal": "demo-board",
+    "hr_email": "hr@quanta-demo.example.org",
+    "location": "Remote (India)",
+    "posted_date": "2026-11-22",
+    "tags": ["ai", "ml", "python"],
+    "description": "SAMPLE LISTING FOR DEMONSTRATION. Help train and evaluate machine learning models in Python and build small LLM-based features. 0-1 years of experience. Projects in AI or ML are a plus."
+  },
+  {
+    "url": "https://demo.jobsherpa.example/jobs/106",
+    "title": "Backend Developer Trainee (Python)",
+    "company": "Harbor Systems (sample)",
+    "portal": "demo-board",
+    "hr_email": "jobs@harbor-demo.example.org",
+    "location": "Remote (India)",
+    "posted_date": "2026-11-22",
+    "tags": ["python", "sql", "git"],
+    "description": "SAMPLE LISTING FOR DEMONSTRATION. Six-month trainee programme for backend development in Python with SQL databases. No prior experience required."
+  }
+]

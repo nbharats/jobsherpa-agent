@@ -18,7 +18,7 @@ from agent.state import AgentState
 from agent.utils import CriticalError, safe_node
 from database import db_manager as db
 from tools import email_sender
-from tools.email_finder import find_hr_emails
+from tools.email_finder import find_hr_emails, is_valid_email
 from tools.hr_csv import read_hr_csv
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,12 @@ def _pick_targets(candidates: list[Job], budget: int,
         if len(targets) >= budget:
             break
         job_hash = db.make_job_hash(job["url"])
-        contacts = find_hr_emails(job.get("company", ""), save=not dry_run)
+        provided = (job.get("hr_email") or "").strip().lower()
+        if provided and is_valid_email(provided):
+            contacts = [{"email": provided, "domain": provided.split("@")[1],
+                         "source": "provided", "verified": True}]
+        else:
+            contacts = find_hr_emails(job.get("company", ""), save=not dry_run)
         if not contacts:
             records.append(_record(job, "", "no_contact"))
             if not dry_run:
@@ -239,3 +244,4 @@ def hr_drip_campaign(state: AgentState) -> dict[str, Any]:
 
     errors = [f"hr_drip: {problem}; no drip emails were sent"] if problem else []
     return {"drip_emails_sent": sent, "errors": [*state["errors"], *errors]}
+

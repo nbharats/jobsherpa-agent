@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import config
 from agent.graph import build_graph, route_after_filter
-from agent.nodes import email_node, memory_node, scrape_node, score_node, stubs
+from agent.nodes import apply_node, email_node, memory_node, scrape_node, score_node, stubs
 from agent.state import make_initial_state
 from agent.utils import CriticalError, safe_node
 from database import db_manager as db
@@ -63,12 +63,15 @@ def fake_finder(company: str, **kwargs):
 
 
 def fake_jobs(count: int) -> list[dict]:
-    """Jobs that pass the filter; portals alternate so some can auto-apply."""
-    return [
-        make_job(url=f"https://example.com/jobs/{i}", title=f"Python Developer {i}",
-                 company=f"Acme{i}", portal="stub" if i % 2 == 0 else "remoteok")
-        for i in range(count)
-    ]
+    """Jobs that pass the filter; every other job has an application form URL."""
+    jobs = []
+    for i in range(count):
+        job = make_job(url=f"https://example.com/jobs/{i}", title=f"Python Developer {i}",
+                       company=f"Acme{i}", portal="stub" if i % 2 == 0 else "remoteok")
+        if i % 2 == 0:
+            job["apply_url"] = "https://example.com/apply"
+        jobs.append(job)
+    return jobs
 
 
 @contextmanager
@@ -91,7 +94,7 @@ def pipeline_env(job_count: int = 3, fail_scraper: bool = False, **overrides):
                             encoding="utf-8")
         settings = {**RULES, "USER_PROFILE": TEST_PROFILE, "DAILY_EMAIL_LIMIT": 100,
                     "DRIP_BATCH_SIZE": 2, "HR_CSV_PATH": csv_path, "EMAIL_REDIRECT_TO": "",
-                    "MAX_COLD_EMAILS_PER_DAY": 3, **overrides}
+                    "MAX_COLD_EMAILS_PER_DAY": 3, "AUTO_APPLY_PORTALS": ['stub'], **overrides, }
         stack.enter_context(patch.object(config, "DATABASE_PATH", Path(tmp) / "t.db"))
         stack.enter_context(patch.multiple(config, **settings))
         stack.enter_context(patch.object(scrape_node, "run_all_scrapers",
@@ -101,6 +104,7 @@ def pipeline_env(job_count: int = 3, fail_scraper: bool = False, **overrides):
         stack.enter_context(patch.object(email_node, "find_hr_emails", fake_finder))
         stack.enter_context(patch.object(email_node, "pause"))
         stack.enter_context(patch.object(email_sender, "sender_problem", return_value=None))
+        stack.enter_context(patch.object(apply_node, "pause"))
         db.init_db()
         yield
 
@@ -108,7 +112,7 @@ def pipeline_env(job_count: int = 3, fail_scraper: bool = False, **overrides):
 @contextmanager
 def external_mocks():
     """Replace the three external actions with mocks and yield them."""
-    with (patch.object(stubs, "submit_application") as submit,
+    with (patch.object(apply_node, "submit_application") as submit,
           patch.object(email_node, "send_cold_email", return_value="delivered@test.com") as email,
           patch.object(email_node, "send_drip_email", return_value="delivered@test.com") as drip):
         yield submit, email, drip

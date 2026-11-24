@@ -189,6 +189,12 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 
+AUTO_APPLY_PORTALS = get_list("AUTO_APPLY_PORTALS", "demo")
+ENABLE_DEMO_PORTAL = get_bool("ENABLE_DEMO_PORTAL", False)
+PLAYWRIGHT_HEADLESS = get_bool("PLAYWRIGHT_HEADLESS", True)
+APPLY_DELAY_MIN_SECONDS = get_int("APPLY_DELAY_MIN_SECONDS", 3)
+APPLY_DELAY_MAX_SECONDS = get_int("APPLY_DELAY_MAX_SECONDS", 8)
+
 
 def validate_basic_config() -> None:
     """Check basic settings without requiring API credentials."""
