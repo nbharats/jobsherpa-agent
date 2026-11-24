@@ -78,9 +78,10 @@ def score_jobs(state: AgentState) -> dict[str, Any]:
     if not state.get("dry_run", True):
         _save_scores(scored)
 
-        shortlist = [j for j in scored
-                 if j["score_source"] == "gemini"
-                 and j["relevance_score"] >= config.JOB_SCORE_THRESHOLD][:config.TOP_N_JOBS]
+    eligible = [j for j in scored
+                if j["score_source"] == "gemini" or config.ALLOW_FALLBACK_SHORTLIST]
+    shortlist = [j for j in eligible
+                 if j["relevance_score"] >= config.JOB_SCORE_THRESHOLD][:config.TOP_N_JOBS]
     logger.info("Score: %d scored, %d shortlisted (threshold %s, top %s)",
                 len(scored), len(shortlist), config.JOB_SCORE_THRESHOLD, config.TOP_N_JOBS)
     return {

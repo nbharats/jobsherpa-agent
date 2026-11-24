@@ -117,9 +117,16 @@ def parse_scores(text: str, valid_ids: set[str]) -> dict[str, tuple[float, str]]
 
 
 def heuristic_score(job: Job, skills: list[str]) -> float:
-    """Keyword score from 0 to 10, used when the LLM is unavailable."""
+    """Keyword score from 0 to 10, used when the LLM is unavailable.
+
+    Body matches add at most 2 points, and a job with no skill in its title
+    or tags can never score above 4.
+    """
     core = f"{job.get('title', '')} {' '.join(job.get('tags') or [])}"
     body = job.get("description") or ""
     core_hits = sum(1 for s in skills if keyword_pattern(s).search(core))
     body_hits = sum(1 for s in skills if keyword_pattern(s).search(body))
-    return round(min(10.0, 2.0 + 2.0 * core_hits + 0.5 * body_hits), 1)
+    score = 2.0 + 2.0 * core_hits + min(2.0, 0.5 * body_hits)
+    if core_hits == 0:
+        score = min(score, 4.0)
+    return round(min(10.0, score), 1)

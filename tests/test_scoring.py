@@ -277,6 +277,34 @@ def test_fallback_scores_are_never_acted_on():
         assert len(update["scored_jobs"]) == 3 and update["jobs_to_apply"] == []
         assert all(db.get_job(db.make_job_hash(j["url"]))["relevance_score"] == 0 for j in jobs)
 
+def test_server_errors_fail_over_sooner():
+    sleeps, calls = [], []
+
+    def busy():
+        calls.append(1)
+        raise FakeApiError(503)
+
+    try:
+        call_with_backoff(busy, sleep=sleeps.append)
+    except FakeApiError:
+        assert sleeps == [5, 10] and len(calls) == 3
+    else:
+        raise AssertionError("a busy model was retried forever")
+
+
+def test_fallback_scores_are_not_shortlisted_by_default():
+    def raising(prompt, **kwargs):
+        raise LLMError("quota")
+
+    jobs = [make_job(url=f"https://example.com/jobs/{i}", title=f"Python Flask Developer {i}",
+                     company="Acme", portal="test", description="Flask SQL Python")
+            for i in range(2)]
+    blocked = run_node(raising, jobs, ALLOW_FALLBACK_SHORTLIST=False)
+    assert all(j["relevance_score"] >= 7 for j in blocked["scored_jobs"])   # would pass the threshold
+    assert blocked["jobs_to_apply"] == []                                   # but are not trusted
+    allowed = run_node(raising, jobs, ALLOW_FALLBACK_SHORTLIST=True)
+    assert len(allowed["jobs_to_apply"]) == 2
+
 TESTS = [
     test_prompt_content,
     test_parse_scores,
@@ -289,7 +317,9 @@ TESTS = [
     test_scores_saved_only_on_real_runs,
     test_database_failure_is_critical,
     test_overload_errors_fail_over_sooner,
-    test_fallback_scores_are_never_acted_on
+    test_fallback_scores_are_never_acted_on,
+    test_server_errors_fail_over_sooner,
+    test_fallback_scores_are_not_shortlisted_by_default,
 ]
 
 

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Emails{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Cold emails</h2>
+  <p class="muted">Subjects and bodies are in the daily report. When EMAIL_REDIRECT_TO is set, these went to your test address, not to the company.</p>
+  <div class="scroll"><table>
+    <tr><th>Company</th><th>Job</th><th>HR address</th><th>Status</th><th>Date</th></tr>
+    {% for r in cold %}
+    <tr>
+      <td>{{ r.company }}</td>
+      <td>{% if r.link %}<a href="{{ r.link }}" target="_blank" rel="noopener noreferrer">{{ r.title }}</a>{% else %}{{ r.title }}{% endif %}</td>
+      <td>{{ r.hr_email }}</td>
+      <td><span class="badge {{ r.status }}">{{ r.status }}</span></td>
+      <td>{{ r.date }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">No cold emails yet.</td></tr>
+    {% endfor %}
+  </table></div>
+</div>
+
+<div class="card">
+  <h2>HR drip campaign</h2>
+  <div class="scroll"><table>
+    <tr><th>Email</th><th>Name</th><th>Company</th><th>Designation</th><th>Status</th><th>Date</th></tr>
+    {% for r in drip %}
+    <tr>
+      <td>{{ r.email }}</td><td>{{ r.name }}</td><td>{{ r.company }}</td><td>{{ r.designation }}</td>
+      <td><span class="badge {{ r.status }}">{{ r.status }}</span></td>
+      <td>{{ r.date }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="muted">No drip emails sent yet.</td></tr>
+    {% endfor %}
+  </table></div>
+</div>
+{% endblock %}

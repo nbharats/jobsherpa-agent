@@ -86,9 +86,15 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--live", action="store_true", help="perform real actions")
     parser.add_argument("--yes", action="store_true",
                         help="allow live emails to real companies (EMAIL_REDIRECT_TO empty)")
+    parser.add_argument("--dashboard", action="store_true",
+                        help="start the web dashboard (http://127.0.0.1:5000)")
     args = parser.parse_args(argv)
 
     setup_logging()
+    if args.dashboard:
+        from dashboard.app import run_dashboard
+        run_dashboard()
+        return 0
     dry_run = resolve_dry_run(args.dry_run, args.live)
     if not dry_run:
         if not config.EMAIL_REDIRECT_TO and not args.yes:

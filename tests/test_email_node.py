@@ -250,6 +250,21 @@ def test_provided_hr_email_skips_lookup():
         assert m.cold.call_args.args[0] == "careers@nimbus-demo.example.org"
         assert update["total_emailed"] == 1
 
+def test_real_sends_are_logged():
+    jobs = [job(1), job(2)]
+    with email_env(limit=2, drip_batch=1) as m:
+        m.cold.side_effect = [EmailSendError("boom"), "delivered@test.com"]
+        email_node.send_emails(cold_state(jobs, dry_run=False))
+        email_node.hr_drip_campaign(make_initial_state(dry_run=False))
+        log = db.get_email_log()                                # newest first
+        assert [(r["kind"], r["status"]) for r in log] == [
+            ("drip", "sent"), ("cold", "sent"), ("cold", "failed")]
+        assert log[1]["delivered_to"] == "delivered@test.com" and log[1]["job_hash"]
+        assert all(r["subject"] and r["body"] for r in log)
+    with email_env() as m:
+        email_node.send_emails(cold_state([job(3)], dry_run=True))
+        assert db.get_email_log() == []                         # dry run logs nothing
+
 TESTS = [
     test_dry_run_writes_and_sends_nothing,
     test_real_run_respects_limit,
@@ -266,6 +281,7 @@ TESTS = [
     test_drip_dry_run_skips_handled_contacts,
     test_drip_failure_and_missing_credentials,
     test_provided_hr_email_skips_lookup,
+    test_real_sends_are_logged,
 ]
 
 

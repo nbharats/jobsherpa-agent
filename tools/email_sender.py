@@ -20,10 +20,18 @@ class EmailSendError(Exception):
     """Raised when an email cannot be built or delivered."""
 
 
-def sender_problem() -> str | None:
-    """Return why real sending is impossible right now, or None if it is ready."""
+def credentials_problem() -> str | None:
+    """Return why sending is impossible (missing credentials), or None."""
     if not config.GMAIL_ADDRESS or not config.GMAIL_APP_PASSWORD:
         return "Gmail credentials are missing in .env"
+    return None
+
+
+def sender_problem() -> str | None:
+    """Return why real sending is impossible right now, or None if it is ready."""
+    problem = credentials_problem()
+    if problem:
+        return problem
     if not Path(config.RESUME_PATH).is_file():
         return f"Resume PDF not found at {config.RESUME_PATH}"
     return None
@@ -55,6 +63,14 @@ def apply_redirect(recipient: str, subject: str, body: str) -> tuple[str, str, s
             f"[TEST MODE: this email would have gone to {recipient}]\n\n{body}")
 
 
+def _deliver(message: EmailMessage) -> None:
+    """Log in to Gmail over SSL and send one message."""
+    with smtplib.SMTP_SSL(config.SMTP_HOST, config.SMTP_PORT,
+                          context=ssl.create_default_context(), timeout=30) as smtp:
+        smtp.login(config.GMAIL_ADDRESS, config.GMAIL_APP_PASSWORD.replace(" ", ""))
+        smtp.send_message(message)
+
+
 def send_email(recipient: str, subject: str, body: str) -> str:
     """Send one email with the resume attached; return the address it went to.
 
@@ -66,11 +82,30 @@ def send_email(recipient: str, subject: str, body: str) -> str:
     to, subject, body = apply_redirect(recipient, subject, body)
     try:
         message = build_message(config.GMAIL_ADDRESS, to, subject, body, Path(config.RESUME_PATH))
-        with smtplib.SMTP_SSL(config.SMTP_HOST, config.SMTP_PORT,
-                              context=ssl.create_default_context(), timeout=30) as smtp:
-            smtp.login(config.GMAIL_ADDRESS, config.GMAIL_APP_PASSWORD.replace(" ", ""))
-            smtp.send_message(message)
+        _deliver(message)
     except (smtplib.SMTPException, OSError, ValueError) as exc:
         raise EmailSendError(f"Could not send to {to}: {exc}") from exc
     logger.info("Email sent to %s", to)
     return to
+
+
+def send_html(recipient: str, subject: str, html: str, text: str) -> None:
+    """Send an HTML email with a plain-text alternative and no attachment.
+
+    Used for the daily report. It is never redirected: it goes to the
+    recipient given, which is your own REPORT_EMAIL. Raises EmailSendError.
+    """
+    problem = credentials_problem()
+    if problem:
+        raise EmailSendError(problem)
+    try:
+        message = EmailMessage()
+        message["From"] = config.GMAIL_ADDRESS
+        message["To"] = recipient
+        message["Subject"] = " ".join(subject.split())
+        message.set_content(text)
+        message.add_alternative(html, subtype="html")
+        _deliver(message)
+    except (smtplib.SMTPException, OSError, ValueError) as exc:
+        raise EmailSendError(f"Could not send the report to {recipient}: {exc}") from exc
+    logger.info("Report emailed to %s", recipient)

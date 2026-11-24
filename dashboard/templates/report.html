@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Report{% endblock %}
+{% block content %}
+{% if has_report %}
+<iframe src="/report/latest" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Latest daily report"></iframe>
+{% else %}
+<div class="card">No report yet. Run: <code>python main.py --run-now --dry-run</code></div>
+{% endif %}
+{% endblock %}

@@ -8,8 +8,9 @@ import config
 
 logger = logging.getLogger(__name__)
 
-BACKOFF_SECONDS = (5, 10, 20, 40)   # retry delays from the assignment
-RETRYABLE_CODES = {429, 500, 503}
+BACKOFF_SECONDS = (5, 10, 20, 40)   
+SERVER_ERROR_CODES = {500, 503}
+SERVER_ERROR_RETRIES = 2            
 
 _client: Any = None
 _last_call: float | None = None
@@ -19,9 +20,18 @@ class LLMError(Exception):
     """Raised when Gemini cannot produce a reply; callers use a fallback."""
 
 
+def max_retries(exc: Exception) -> int:
+    """Retries allowed after this error: 429 gets the full schedule, 500/503 get two."""
+    code = getattr(exc, "code", None)
+    if code == 429:
+        return len(BACKOFF_SECONDS)
+    if code in SERVER_ERROR_CODES:
+        return SERVER_ERROR_RETRIES
+    return 0
+
+
 def is_retryable(exc: Exception) -> bool:
-    """True for rate-limit (429) and temporary server (500, 503) errors."""
-    return getattr(exc, "code", None) in RETRYABLE_CODES
+    return max_retries(exc) > 0
 
 
 def _throttle() -> None:
@@ -45,13 +55,6 @@ def _get_client() -> Any:
     return _client
 
 
-MAX_OVERLOAD_RETRIES = 2
-
-def retry_limit(exc: Exception) -> int:
-    """429 (rate limit) gets all four retries; 500 and 503 (server trouble) only two,
-    because another model is more likely to answer than waiting longer."""
-    return len(BACKOFF_SECONDS) if getattr(exc, "code", None) == 429 else MAX_OVERLOAD_RETRIES
-
 def call_with_backoff(
     call: Callable[[], str],
     sleep: Callable[[float], None] | None = None,
@@ -63,13 +66,14 @@ def call_with_backoff(
         try:
             return call()
         except Exception as exc:
-            if not is_retryable(exc) or attempt >= retry_limit(exc):
+            if attempt >= max_retries(exc):
                 raise
             delay = BACKOFF_SECONDS[attempt]
             logger.warning("Gemini returned %s; retrying in %ss",
                            getattr(exc, "code", "an error"), delay)
             pause(delay)
             attempt += 1
+
 
 def generate_text(prompt: str, *, temperature: float = 0.2, json_output: bool = False) -> str:
     """Return Gemini's reply, trying the fallback models if one is exhausted.

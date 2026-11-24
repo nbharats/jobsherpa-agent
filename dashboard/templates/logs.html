@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Logs{% endblock %}
+{% block content %}
+<form class="filters" method="get" action="/logs">
+  <label>Level
+    <select name="level">
+      {% for l in levels %}<option value="{{ l }}" {{ 'selected' if l == level }}>{{ l }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Lines <input type="number" name="lines" value="{{ lines }}" min="10" max="1000" step="10"></label>
+  <button type="submit">Show</button>
+</form>
+<pre>{% for line in rows %}{{ line }}
+{% else %}No log lines yet. Run: python main.py --run-now --dry-run{% endfor %}</pre>
+{% endblock %}

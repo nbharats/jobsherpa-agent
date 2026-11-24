@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JobSherpa - {% block title %}Dashboard{% endblock %}</title>
+<style>
+  :root { --bg:#f4f4f5; --card:#ffffff; --text:#18181b; --muted:#71717a; --line:#e4e4e7;
+          --accent:#4f46e5; --ok:#15803d; --warn:#b45309; --bad:#b91c1c; }
+  [data-theme="dark"] { --bg:#18181b; --card:#27272a; --text:#fafafa; --muted:#a1a1aa;
+          --line:#3f3f46; --accent:#818cf8; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, Arial, sans-serif; background:var(--bg); color:var(--text); }
+  header { display:flex; flex-wrap:wrap; align-items:center; gap:1rem; padding:.8rem 1.2rem;
+           background:var(--card); border-bottom:1px solid var(--line); }
+  header h1 { font-size:1.1rem; margin:0 1rem 0 0; }
+  nav a { margin-right:.9rem; color:var(--muted); text-decoration:none; padding-bottom:.2rem; }
+  nav a.active { color:var(--accent); border-bottom:2px solid var(--accent); }
+  button, select, input { font:inherit; padding:.3rem .6rem; background:var(--card); color:var(--text);
+           border:1px solid var(--line); border-radius:6px; }
+  #theme-toggle { margin-left:auto; cursor:pointer; }
+  main { max-width:1100px; margin:1.2rem auto; padding:0 1rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px;
+          padding:1rem 1.2rem; margin-bottom:1rem; }
+  h2 { font-size:1rem; margin:0 0 .6rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:.8rem; }
+  .metric .value { font-size:1.6rem; font-weight:600; }
+  .metric .label, .muted { color:var(--muted); font-size:.85rem; }
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; }
+  th, td { text-align:left; padding:.45rem .5rem; border-bottom:1px solid var(--line); vertical-align:top; }
+  a { color:var(--accent); }
+  .badge { padding:.1rem .5rem; border-radius:999px; font-size:.78rem; border:1px solid var(--line); }
+  .badge.applied, .badge.email_sent, .badge.sent { color:var(--ok); border-color:var(--ok); }
+  .badge.failed, .badge.invalid { color:var(--bad); border-color:var(--bad); }
+  .badge.manual_required { color:var(--warn); border-color:var(--warn); }
+  .bar { background:var(--accent); height:10px; border-radius:3px; }
+  pre { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem;
+        overflow:auto; font-size:.8rem; line-height:1.4; max-height:70vh; }
+  iframe { width:100%; height:80vh; border:1px solid var(--line); border-radius:8px; background:#fff; }
+  form.filters { display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:.8rem; align-items:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>JobSherpa</h1>
+  <nav>
+    <a href="/" class="{{ 'active' if page == 'overview' }}">Overview</a>
+    <a href="/jobs" class="{{ 'active' if page == 'jobs' }}">Jobs</a>
+    <a href="/emails" class="{{ 'active' if page == 'emails' }}">Emails</a>
+    <a href="/logs" class="{{ 'active' if page == 'logs' }}">Logs</a>
+    <a href="/report" class="{{ 'active' if page == 'report' }}">Report</a>
+  </nav>
+  <button id="theme-toggle" type="button">Dark / light</button>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<script>
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('theme'); } catch (e) {}
+    if (saved) { document.documentElement.setAttribute('data-theme', saved); }
+    document.getElementById('theme-toggle').addEventListener('click', function () {
+      var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch (e) {}
+    });
+  })();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

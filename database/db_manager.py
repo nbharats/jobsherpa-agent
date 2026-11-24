@@ -13,6 +13,8 @@ HASH_LENGTH = 16
 JOB_STATUSES = {"new", "in_progress", "applied", "email_sent", "failed", "manual_required"}
 DRIP_STATUSES = {"pending", "sent", "invalid", "failed"}
 TRACKING_PARAMS = {"fbclid", 'gclid', "ref", "refid", "trackingid"}
+EMAIL_KINDS = {"cold", "drip"}
+EMAIL_LOG_STATUSES = {"sent", "failed"}
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS applications(
@@ -63,6 +65,18 @@ CREATE TABLE IF NOT EXISTS drip_outreach (
     designation TEXT,
     sent_date TEXT,
     status TEXT DEFAULT 'pending'
+);
+CREATE TABLE IF NOT EXISTS email_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sent_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    kind TEXT,
+    recipient TEXT,
+    delivered_to TEXT,
+    company TEXT,
+    subject TEXT,
+    body TEXT,
+    status TEXT,
+    job_hash TEXT
 );
 """
 
@@ -181,7 +195,7 @@ def update_job_status(job_hash, status, hr_email=None, notes=None):
         cur = conn.execute(
             """UPDATE applications
                SET status = ?,
-                   applied_date = CASE WHEN ? = 'applied' THEN ? ELSE applied_date END,
+                   applied_date = CASE WHEN ? IN ('applied', 'email_sent') THEN ? ELSE applied_date END,
                    email_sent = CASE WHEN ? = 'email_sent' THEN 1 ELSE email_sent END,
                    hr_email = COALESCE(?, hr_email),
                    notes = COALESCE(?, notes)
@@ -220,20 +234,25 @@ def recover_interrupted_jobs():
         )
         return cur.rowcount
     
-def get_jobs(status= None, limit= None):
-    '''Return jobs as dicts, newest furst,optionally filteredby status.'''
-    query = 'SELECT * FROM applications'
-    params = []
+def get_jobs(status=None, limit=None, portal=None):
+    """Return jobs as dicts, newest first, optionally filtered by status and portal."""
+    query = "SELECT * FROM applications"
+    clauses, params = [], []
     if status:
-        query += " WHERE status = ?"
+        clauses.append("status = ?")
         params.append(status)
-        query += "ORDER BY id DESC"
-    if limit :
-        query += "LIMIT ?"
+    if portal:
+        clauses.append("portal = ?")
+        params.append(portal)
+    if clauses:
+        query += " WHERE " + " AND ".join(clauses)
+    query += " ORDER BY id DESC"
+    if limit:
+        query += " LIMIT ?"
         params.append(limit)
     with get_connection() as conn:
         return [dict(r) for r in conn.execute(query, params).fetchall()]
-
+    
 # ---------- hr_contacts ----------
 
 def add_hr_contact(company, company_domain, hr_email, hr_name=None,
@@ -350,3 +369,97 @@ def hr_email_already_contacted(hr_email):
                 (address,),
             ).fetchone()
         return row is not None
+
+# ---------- daily_stats totals and the email log ----------
+
+def get_stats_totals():
+    """Return all-time sums over daily_stats, plus the number of days recorded."""
+    with get_connection() as conn:
+        row = conn.execute(
+            """SELECT COALESCE(SUM(total_scraped), 0) AS total_scraped,
+                      COALESCE(SUM(total_new), 0) AS total_new,
+                      COALESCE(SUM(total_applied), 0) AS total_applied,
+                      COALESCE(SUM(total_emailed), 0) AS total_emailed,
+                      COALESCE(SUM(total_failed), 0) AS total_failed,
+                      COALESCE(SUM(run_time_seconds), 0) AS run_time_seconds,
+                      COUNT(*) AS days
+               FROM daily_stats"""
+        ).fetchone()
+        return dict(row)
+
+
+def log_email(kind, recipient, delivered_to, company, subject, body, status, job_hash=None):
+    """Record one real send attempt for the dashboard's Emails view."""
+    if kind not in EMAIL_KINDS:
+        raise ValueError(f"Invalid email kind: {kind}")
+    if status not in EMAIL_LOG_STATUSES:
+        raise ValueError(f"Invalid email status: {status}")
+    with get_connection() as conn:
+        cur = conn.execute(
+            """INSERT INTO email_log
+               (kind, recipient, delivered_to, company, subject, body, status, job_hash)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (kind, (recipient or "").strip(), (delivered_to or "").strip(), company,
+             subject, body, status, job_hash),
+        )
+        return cur.lastrowid
+
+
+def get_email_log(limit=200):
+    """Return logged emails as dicts, newest first."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM email_log ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+# ---------- dashboard queries ----------
+
+def list_portals():
+    """Every portal name that has at least one job."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT DISTINCT portal FROM applications WHERE portal IS NOT NULL ORDER BY portal"
+        ).fetchall()
+        return [r["portal"] for r in rows]
+
+
+def get_totals():
+    """All-time sums from daily_stats, plus how many days are recorded."""
+    with get_connection() as conn:
+        row = conn.execute(
+            """SELECT COALESCE(SUM(total_scraped), 0) AS scraped,
+                      COALESCE(SUM(total_new), 0) AS new,
+                      COALESCE(SUM(total_applied), 0) AS applied,
+                      COALESCE(SUM(total_emailed), 0) AS emailed,
+                      COALESCE(SUM(total_failed), 0) AS failed,
+                      COUNT(*) AS days
+               FROM daily_stats"""
+        ).fetchone()
+        return dict(row)
+
+
+def get_stats_for(day):
+    """The daily_stats row for a YYYY-MM-DD date, or None."""
+    with get_connection() as conn:
+        row = conn.execute("SELECT * FROM daily_stats WHERE date = ?", (day,)).fetchone()
+        return dict(row) if row else None
+
+
+def list_emailed_jobs(limit=200):
+    """Jobs that received a cold email, newest first."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM applications WHERE email_sent = 1 ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def list_drip_history(limit=200):
+    """HR drip contacts that are no longer pending, newest first."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM drip_outreach WHERE status != 'pending' ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        return [dict(r) for r in rows]

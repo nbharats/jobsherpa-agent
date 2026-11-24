@@ -61,6 +61,8 @@ def get_int(name: str, default: int) -> int:
 CACHE_DIR = DATA_DIR / "cache"
 SCRAPER_TIMEOUT_SECONDS = get_int("SCRAPER_TIMEOUT_SECONDS", 20)
 CACHE_TTL_HOURS = get_int("CACHE_TTL_HOURS", 12)
+DASHBOARD_HOST = os.getenv("DASHBOARD_HOST", "127.0.0.1")
+DASHBOARD_PORT = get_int("DASHBOARD_PORT", 5000)
 
 def get_list(name: str, default: str = "") -> list[str]:
     """Read a comma-separated environment variable as a list."""
@@ -171,6 +173,7 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 GEMINI_FALLBACK_MODELS = get_list("GEMINI_FALLBACK_MODELS", "")
+ALLOW_FALLBACK_SHORTLIST = get_bool("ALLOW_FALLBACK_SHORTLIST", False)
 
 
 GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS", "")
