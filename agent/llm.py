@@ -45,24 +45,31 @@ def _get_client() -> Any:
     return _client
 
 
+MAX_OVERLOAD_RETRIES = 2
+
+def retry_limit(exc: Exception) -> int:
+    """429 (rate limit) gets all four retries; 500 and 503 (server trouble) only two,
+    because another model is more likely to answer than waiting longer."""
+    return len(BACKOFF_SECONDS) if getattr(exc, "code", None) == 429 else MAX_OVERLOAD_RETRIES
+
 def call_with_backoff(
     call: Callable[[], str],
     sleep: Callable[[float], None] | None = None,
 ) -> str:
     """Run call(); on a retryable error wait 5, 10, 20, then 40 seconds and retry."""
     pause = sleep if sleep is not None else time.sleep
-    for attempt in range(len(BACKOFF_SECONDS) + 1):
+    attempt = 0
+    while True:
         try:
             return call()
         except Exception as exc:
-            if not is_retryable(exc) or attempt == len(BACKOFF_SECONDS):
+            if not is_retryable(exc) or attempt >= retry_limit(exc):
                 raise
             delay = BACKOFF_SECONDS[attempt]
             logger.warning("Gemini returned %s; retrying in %ss",
                            getattr(exc, "code", "an error"), delay)
             pause(delay)
-    raise RuntimeError("unreachable")
-
+            attempt += 1
 
 def generate_text(prompt: str, *, temperature: float = 0.2, json_output: bool = False) -> str:
     """Return Gemini's reply, trying the fallback models if one is exhausted.

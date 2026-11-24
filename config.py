@@ -17,6 +17,7 @@ ENV_FILE = BASE_DIR / ".env"
 PROFILE_FILE = BASE_DIR / "user_profile.json"
 
 DATA_DIR = BASE_DIR / "data"
+REPORTS_DIR = DATA_DIR / "reports"
 LOGS_DIR = BASE_DIR / "logs"
 
 load_dotenv(ENV_FILE)

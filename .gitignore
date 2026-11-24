@@ -24,3 +24,5 @@ data/cache/
 
 data/*.pdf
 data/hr_contacts.csv
+
+data/reports/

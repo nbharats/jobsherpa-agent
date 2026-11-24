@@ -47,6 +47,8 @@ def _save_scores(scored: list[dict[str, Any]]) -> None:
     """Store scores in SQLite. A database failure is critical, as in the filter."""
     try:
         for job in scored:
+            if job["score_source"] != "gemini":
+                continue                      # 
             db.update_job_score(db.make_job_hash(job["url"]), job["relevance_score"])
     except sqlite3.Error as exc:
         raise CriticalError(f"Database error while saving scores: {exc}") from exc
@@ -76,8 +78,9 @@ def score_jobs(state: AgentState) -> dict[str, Any]:
     if not state.get("dry_run", True):
         _save_scores(scored)
 
-    shortlist = [j for j in scored
-                 if j["relevance_score"] >= config.JOB_SCORE_THRESHOLD][:config.TOP_N_JOBS]
+        shortlist = [j for j in scored
+                 if j["score_source"] == "gemini"
+                 and j["relevance_score"] >= config.JOB_SCORE_THRESHOLD][:config.TOP_N_JOBS]
     logger.info("Score: %d scored, %d shortlisted (threshold %s, top %s)",
                 len(scored), len(shortlist), config.JOB_SCORE_THRESHOLD, config.TOP_N_JOBS)
     return {

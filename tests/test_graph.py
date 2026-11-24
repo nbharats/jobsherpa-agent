@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import config
 from agent.graph import build_graph, route_after_filter
-from agent.nodes import apply_node, email_node, memory_node, scrape_node, score_node, stubs
+from agent.nodes import apply_node, email_node, memory_node,report_node, scrape_node, score_node
 from agent.state import make_initial_state
 from agent.utils import CriticalError, safe_node
 from database import db_manager as db
@@ -30,7 +30,7 @@ RULES = dict(
     SENIOR_KEYWORDS=["senior", "lead", "vp", "manager"],
     MAX_YEARS_REQUIRED=2,
 )
-# 8 jobs: 7 pass the score threshold, shortlist 5, apply limit 2, email limit 1
+
 BUSY = dict(JOB_SCORE_THRESHOLD=7, TOP_N_JOBS=5,
             MAX_APPLY_PER_DAY=2, MAX_COLD_EMAILS_PER_DAY=1)
 
@@ -94,7 +94,9 @@ def pipeline_env(job_count: int = 3, fail_scraper: bool = False, **overrides):
                             encoding="utf-8")
         settings = {**RULES, "USER_PROFILE": TEST_PROFILE, "DAILY_EMAIL_LIMIT": 100,
                     "DRIP_BATCH_SIZE": 2, "HR_CSV_PATH": csv_path, "EMAIL_REDIRECT_TO": "",
-                    "MAX_COLD_EMAILS_PER_DAY": 3, "AUTO_APPLY_PORTALS": ['stub'], **overrides, }
+                    "MAX_COLD_EMAILS_PER_DAY": 3, "AUTO_APPLY_PORTALS": ['stub'],
+                    "REPORTS_DIR": Path(tmp) / "reports", "REPORT_EMAIL": "me@gmail.com", 
+                     **overrides, }
         stack.enter_context(patch.object(config, "DATABASE_PATH", Path(tmp) / "t.db"))
         stack.enter_context(patch.multiple(config, **settings))
         stack.enter_context(patch.object(scrape_node, "run_all_scrapers",
@@ -105,6 +107,7 @@ def pipeline_env(job_count: int = 3, fail_scraper: bool = False, **overrides):
         stack.enter_context(patch.object(email_node, "pause"))
         stack.enter_context(patch.object(email_sender, "sender_problem", return_value=None))
         stack.enter_context(patch.object(apply_node, "pause"))
+        stack.enter_context(patch.object(report_node, "send_report_email"))
         db.init_db()
         yield
 
@@ -138,6 +141,7 @@ def test_normal_run():
     assert final["memory_saved"] is False           # dry run saves no stats
     assert "No previous runs recorded." in final["memory_context"]
     assert final["errors"] == []
+    assert "DRY RUN" in final["report_html"]
 
 
 def test_routing_uses_job_list_not_counter():

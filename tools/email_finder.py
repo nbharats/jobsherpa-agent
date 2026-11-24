@@ -13,9 +13,11 @@ name. The email node therefore keeps volume low and dry-run is the default.
 import logging
 import re
 import unicodedata
+import smtplib
 from collections.abc import Callable, Iterable
 from functools import lru_cache
 from typing import Any
+from email.message import EmailMessage
 
 import dns.exception
 import dns.resolver
@@ -129,3 +131,33 @@ def find_hr_emails(
         return found
     return []
 
+def credentials_problem() -> str | None:
+    """Return why sending is impossible (missing credentials), or None. No resume needed."""
+    if not config.GMAIL_ADDRESS or not config.GMAIL_APP_PASSWORD:
+        return "Gmail credentials are missing in .env"
+    return None
+
+
+def send_html(recipient: str, subject: str, html: str, text: str) -> None:
+    """Send an HTML email with a plain-text alternative and no attachment.
+
+    Used for the daily report. It is never redirected: it goes to the
+    recipient given, which is your own REPORT_EMAIL. Raises EmailSendError.
+    """
+    problem = credentials_problem()
+    if problem:
+        raise EmailSendError(problem)
+    try:
+        message = EmailMessage()
+        message["From"] = config.GMAIL_ADDRESS
+        message["To"] = recipient
+        message["Subject"] = " ".join(subject.split())
+        message.set_content(text)
+        message.add_alternative(html, subtype="html")
+        with smtplib.SMTP_SSL(config.SMTP_HOST, config.SMTP_PORT,
+                              context=ssl.create_default_context(), timeout=30) as smtp:
+            smtp.login(config.GMAIL_ADDRESS, config.GMAIL_APP_PASSWORD.replace(" ", ""))
+            smtp.send_message(message)
+    except (smtplib.SMTPException, OSError, ValueError) as exc:
+        raise EmailSendError(f"Could not send the report to {recipient}: {exc}") from exc
+    logger.info("Report emailed to %s", recipient)

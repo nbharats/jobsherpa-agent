@@ -7,7 +7,7 @@ from pathlib import Path
 import config
 
 FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
-NOISY_LOGGERS = ("httpx", "httpx2", "httpcore")
+NOISY_LOGGERS = ("httpx", "httpx2", "httpcore", "google_genai")
 HANDLER_PREFIX = "jobsherpa-"
 
 

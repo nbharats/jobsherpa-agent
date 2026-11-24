@@ -251,6 +251,31 @@ def test_database_failure_is_critical():
             return
         raise AssertionError("a database failure did not stop the run")
 
+def test_overload_errors_fail_over_sooner():
+    sleeps = []
+
+    def overloaded():
+        raise FakeApiError(503)
+
+    try:
+        call_with_backoff(overloaded, sleep=sleeps.append)
+    except FakeApiError:
+        assert sleeps == [5, 10]               # 503 gets two retries, not four
+    else:
+        raise AssertionError("retries never gave up")
+
+
+def test_fallback_scores_are_never_acted_on():
+    def raising(prompt, **kwargs):
+        raise LLMError("quota")
+
+    jobs = make_jobs(3)
+    with temp_db():
+        for job in jobs:
+            db.insert_job(job)
+        update = run_node(raising, jobs, dry_run=False, JOB_SCORE_THRESHOLD=0)
+        assert len(update["scored_jobs"]) == 3 and update["jobs_to_apply"] == []
+        assert all(db.get_job(db.make_job_hash(j["url"]))["relevance_score"] == 0 for j in jobs)
 
 TESTS = [
     test_prompt_content,
@@ -263,6 +288,8 @@ TESTS = [
     test_node_batches_large_lists,
     test_scores_saved_only_on_real_runs,
     test_database_failure_is_critical,
+    test_overload_errors_fail_over_sooner,
+    test_fallback_scores_are_never_acted_on
 ]
 
 
