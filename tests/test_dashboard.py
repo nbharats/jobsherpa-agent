@@ -8,6 +8,7 @@ import config
 import main
 from dashboard import data
 from dashboard.app import create_app
+import dashboard.app as dashboard_app
 from database import db_manager as db
 
 LOG_LINES = [
@@ -173,6 +174,36 @@ def test_main_dashboard_flag():
         assert main.main(["--dashboard"]) == 0
         assert run.call_count == 1
 
+def test_api_emails_logs_report_meta():
+    with dashboard_env() as (client, root):
+        seed()
+        (root / "logs" / "jobsherpa.log").write_text("\n".join(LOG_LINES), encoding="utf-8")
+        emails = client.get("/api/emails").get_json()
+        assert [r["hr_email"] for r in emails["cold"]] == ["hr@acme.com"]
+        assert [r["email"] for r in emails["drip"]] == ["asha@acme.com"]
+        logs = client.get("/api/logs?level=ERROR").get_json()
+        assert logs["level"] == "ERROR" and len(logs["lines"]) == 1 and "boom" in logs["lines"][0]
+        assert client.get("/api/logs?level=bogus").get_json()["level"] == "ALL"
+        assert client.get("/api/report").get_json() == {"available": False}
+        (root / "reports" / "latest.html").write_text("<html></html>", encoding="utf-8")
+        assert client.get("/api/report").get_json() == {"available": True}
+        meta = client.get("/api/meta").get_json()
+        assert "applied" in meta["statuses"]
+        assert meta["portals"] == ["demo", "remoteok", "remotive"]
+
+
+def test_react_route():
+    with dashboard_env() as (client, root):
+        with patch.object(dashboard_app, "REACT_DIR", root / "missing"):
+            response = client.get("/app")
+            assert response.status_code == 404
+            assert "npm run build" in response.get_data(as_text=True)
+        build = root / "react"
+        build.mkdir()
+        (build / "index.html").write_text("<html>react shell</html>", encoding="utf-8")
+        with patch.object(dashboard_app, "REACT_DIR", build):
+            assert "react shell" in page(client, "/app")
+
 
 TESTS = [
     test_empty_database_pages,
@@ -185,6 +216,8 @@ TESTS = [
     test_api_jobs,
     test_success_rate,
     test_main_dashboard_flag,
+    test_api_emails_logs_report_meta,
+    test_react_route,
 ]
 
 

@@ -256,7 +256,8 @@ def test_real_sends_are_logged():
         m.cold.side_effect = [EmailSendError("boom"), "delivered@test.com"]
         email_node.send_emails(cold_state(jobs, dry_run=False))
         email_node.hr_drip_campaign(make_initial_state(dry_run=False))
-        log = db.get_email_log()                                # newest first
+        log = db.get_email_log() 
+        print([(r["kind"], r["status"]) for r in log])                               # newest first
         assert [(r["kind"], r["status"]) for r in log] == [
             ("drip", "sent"), ("cold", "sent"), ("cold", "failed")]
         assert log[1]["delivered_to"] == "delivered@test.com" and log[1]["job_hash"]

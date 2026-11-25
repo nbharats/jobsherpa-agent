@@ -26,3 +26,5 @@ data/*.pdf
 data/hr_contacts.csv
 
 data/reports/
+
+dashboard/frontend/node_modules/
