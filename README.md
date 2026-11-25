@@ -2,7 +2,7 @@
 
 JobSherpa scrapes job portals, filters and deduplicates the results, scores jobs against a candidate profile with an LLM, applies automatically where a portal supports it, and writes personalised cold emails for the rest. It runs daily on a schedule and sends an HTML summary report. A local dashboard shows everything that happened.
 
-[SCREENSHOT: dashboard overview]
+![Dashboard overview](docs/screenshots/overview.png)
 
 ## How it works
 
@@ -85,7 +85,10 @@ Logs go to `logs/jobsherpa.log` (a new file every midnight, 30 kept). Reports ar
 
 The Flask app has Overview, Jobs, Emails, Logs and Report pages, plus a JSON API under `/api`. A React interface (source in `dashboard/frontend`, built into `dashboard/static/react`) is served at `/app` with live refresh, sortable jobs, a trend chart and dark mode. To rebuild it: `cd dashboard/frontend; npm install; npm run build`.
 
-[SCREENSHOTS: jobs, emails, logs, report]
+![Dashboard overview](docs/screenshots/email.png)
+![Dashboard overview](docs/screenshots/jobs.png)
+![Dashboard overview](docs/screenshots/logs.png)
+![Dashboard overview](docs/screenshots/report.png)
 
 ## Project structure
 
