@@ -2,8 +2,21 @@
 {% block title %}Emails{% endblock %}
 {% block content %}
 <div class="card">
-  <h2>Cold emails</h2>
-  <p class="muted">Subjects and bodies are in the daily report. When EMAIL_REDIRECT_TO is set, these went to your test address, not to the company.</p>
+  <h2>Send log</h2>
+  <p class="muted">Every real send attempt with its full text. Dry runs are not logged. When EMAIL_REDIRECT_TO is set, the email went to your test address, not to the company.</p>
+  {% for r in log %}
+  <details>
+    <summary>{{ r.sent_at }} · {{ r.kind }} · {{ r.company }} · <span class="badge {{ r.status }}">{{ r.status }}</span> · {{ r.subject }}</summary>
+    <p class="muted">To: {{ r.to }}{% if r.delivered_to and r.delivered_to != r.to %} (delivered to {{ r.delivered_to }}){% endif %}</p>
+    <pre>{{ r.body }}</pre>
+  </details>
+  {% else %}
+  <p class="muted">No real emails sent yet.</p>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <h2>Cold emails by job</h2>
   <div class="scroll"><table>
     <tr><th>Company</th><th>Job</th><th>HR address</th><th>Status</th><th>Date</th></tr>
     {% for r in cold %}

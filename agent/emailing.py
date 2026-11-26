@@ -72,6 +72,22 @@ Return ONLY valid JSON. No markdown, no explanation.
 Format: {{"emails": [{{"id": "j0", "subject": "...", "body": "..."}}]}}
 Write one email per job id."""
 
+SIGNOFFS = ("best regards", "kind regards", "warm regards", "regards", "sincerely",
+            "best wishes", "yours sincerely", "yours faithfully", "thanks", "thank you")
+
+
+def strip_signoff(body: str) -> str:
+    """Remove a closing sign-off (and a name line after it) that Gemini added anyway.
+
+    The real signature is added by code, so keeping Gemini's would show it twice.
+    Only the last four lines are checked, and only a line that is nothing but a
+    sign-off phrase counts, so a real sentence like "Thank you for your time." stays.
+    """
+    lines = body.rstrip().splitlines()
+    for index in range(len(lines) - 1, max(-1, len(lines) - 5), -1):
+        if lines[index].strip().rstrip(",.!").lower() in SIGNOFFS:
+            return "\n".join(lines[:index]).rstrip()
+    return body.rstrip()
 
 def parse_emails(text: str, valid_ids: set[str]) -> dict[str, tuple[str, str]]:
     """Return {job id: (subject, body)}; unusable entries are skipped.
@@ -96,7 +112,7 @@ def parse_emails(text: str, valid_ids: set[str]) -> dict[str, tuple[str, str]]:
             continue
         if _PLACEHOLDER.search(subject) or _PLACEHOLDER.search(body):
             continue
-        result[job_id] = (subject, body)
+        result[job_id] = (subject, strip_signoff(body))
     return result
 
 

@@ -10,11 +10,28 @@ export default function Emails() {
   return (
     <>
       <section className="card">
-        <h2>Cold emails</h2>
+        <h2>Send log</h2>
         <p className="muted">
-          Subjects and bodies are in the daily report. When EMAIL_REDIRECT_TO is set, these went to your test address,
-          not to the company.
+          Every real send attempt with its full text. Dry runs are not logged. When EMAIL_REDIRECT_TO is set, the
+          email went to your test address, not to the company.
         </p>
+        {data.log.map((row, index) => (
+          <details key={`${row.sent_at}-${index}`}>
+            <summary>
+              {row.sent_at} · {row.kind} · {row.company} · <Badge value={row.status} /> · {row.subject}
+            </summary>
+            <p className="muted">
+              To: {row.to}
+              {row.delivered_to && row.delivered_to !== row.to ? ` (delivered to ${row.delivered_to})` : ''}
+            </p>
+            <pre>{row.body}</pre>
+          </details>
+        ))}
+        {!data.log.length && <p className="muted">No real emails sent yet.</p>}
+      </section>
+
+      <section className="card">
+        <h2>Cold emails by job</h2>
         <div className="scroll">
           <table>
             <thead>
@@ -51,6 +68,7 @@ export default function Emails() {
           </table>
         </div>
       </section>
+
       <section className="card">
         <h2>HR drip campaign</h2>
         <div className="scroll">

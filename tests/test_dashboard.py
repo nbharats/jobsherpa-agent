@@ -204,6 +204,18 @@ def test_react_route():
         with patch.object(dashboard_app, "REACT_DIR", build):
             assert "react shell" in page(client, "/app")
 
+def test_send_log_in_emails():
+    with dashboard_env() as (client, root):
+        db.log_email("cold", "hr@acme.com", "me@gmail.com", "Acme", "Hi <b>there</b>",
+                     "Body text", "sent", "abc")
+        db.log_email("drip", "asha@acme.com", "", "Acme", "Drip subject", "Drip body", "failed")
+        payload = client.get("/api/emails").get_json()
+        assert [r["kind"] for r in payload["log"]] == ["drip", "cold"]       # newest first
+        assert payload["log"][1]["body"] == "Body text"
+        assert payload["log"][1]["delivered_to"] == "me@gmail.com"
+        html = page(client, "/emails")
+        assert "Hi &lt;b&gt;there&lt;/b&gt;" in html and "Body text" in html
+        assert "<b>there</b>" not in html                                     
 
 TESTS = [
     test_empty_database_pages,
@@ -218,6 +230,7 @@ TESTS = [
     test_main_dashboard_flag,
     test_api_emails_logs_report_meta,
     test_react_route,
+    test_send_log_in_emails
 ]
 
 

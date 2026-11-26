@@ -157,11 +157,15 @@ def send_emails(state: AgentState) -> dict[str, Any]:
             except Exception as exc:
                 logger.warning("Email to %s failed: %s", to, exc)
                 db.update_job_status(job_hash, "failed", hr_email=to, notes=f"email failed: {exc}")
+                db.log_email("cold", to, "", job.get("company", ""), subject, body,
+                             "failed", job_hash)
                 record["status"] = "failed"
                 errors.append(f"email: failed for {job.get('company', '')}: {exc}")
                 continue
             db.update_job_status(job_hash, "email_sent", hr_email=to,
                                  notes="test redirect" if config.EMAIL_REDIRECT_TO else None)
+            db.log_email("cold", to, record["delivered_to"], job.get("company", ""),
+                         subject, body, "sent", job_hash)
             record["status"] = "sent"
             sent += 1
     except sqlite3.Error as exc:
@@ -232,12 +236,14 @@ def hr_drip_campaign(state: AgentState) -> dict[str, Any]:
                 pause()
             attempted = True
             try:
-                send_drip_email(contact["email"], subject, body)
+                delivered = send_drip_email(contact["email"], subject, body)
             except Exception as exc:
                 logger.warning("Drip email to %s failed: %s", contact["email"], exc)
                 db.mark_drip_result(contact["email"], "failed")     # never retried
+                db.log_email("drip", contact["email"], "", contact["company"], subject, body, "failed")
                 continue
             db.mark_drip_result(contact["email"], "sent")
+            db.log_email("drip", contact["email"], delivered, contact["company"], subject, body, "sent")
             sent += 1
     except sqlite3.Error as exc:
         raise CriticalError(f"Database error during the drip: {exc}") from exc

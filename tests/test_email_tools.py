@@ -1,12 +1,13 @@
 """Tests for the sender, the email helpers and the HR CSV reader."""
 import smtplib
 import tempfile
+import json
 from pathlib import Path
 from unittest.mock import patch
 
 import config
 from agent.emailing import (build_email_prompt, drip_email, fallback_cold_email,
-                            parse_emails, signature)
+                            parse_emails, signature, strip_signoff)
 from tools import email_sender
 from tools.email_sender import EmailSendError
 from tools.hr_csv import read_hr_csv
@@ -177,6 +178,18 @@ def test_read_hr_csv():
                            "company": "Acme", "designation": "HR"}
         assert read_hr_csv(Path(tmp) / "missing.csv") == ([], 0)
 
+def test_strip_signoff():
+    assert strip_signoff("Hello.\n\nBest regards,\nTest User") == "Hello."
+    assert strip_signoff("Hello.\n\nBest regards,") == "Hello."
+    assert strip_signoff("Hello.\nRegards") == "Hello."
+    thanks = "Hello.\n\nThank you for your time."
+    assert strip_signoff(thanks) == thanks                      # a real sentence stays
+
+
+def test_parse_emails_strips_signoff():
+    body = GOOD_BODY + "\n\nBest regards,\nTest User"
+    text = json.dumps({"emails": [{"id": "j0", "subject": "Hello role", "body": body}]})
+    assert parse_emails(text, {"j0"}) == {"j0": ("Hello role", GOOD_BODY)}
 
 TESTS = [
     test_send_email_flow,
@@ -187,6 +200,8 @@ TESTS = [
     test_fallback_and_signature,
     test_drip_email,
     test_read_hr_csv,
+    test_strip_signoff,
+    test_parse_emails_strips_signoff
 ]
 
 

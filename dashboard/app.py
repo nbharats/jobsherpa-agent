@@ -66,7 +66,12 @@ def _emails_payload() -> dict[str, list[dict[str, Any]]]:
     drip = [{"email": r["email"], "name": r.get("name") or "", "company": r.get("company") or "",
              "designation": r.get("designation") or "", "status": r["status"],
              "date": _when(r.get("sent_date"))} for r in db.list_drip_history(ROW_LIMIT)]
-    return {"cold": cold, "drip": drip}
+    log = [{"sent_at": _when(r.get("sent_at")), "kind": r["kind"],
+            "company": r.get("company") or "", "to": r.get("recipient") or "",
+            "delivered_to": r.get("delivered_to") or "", "subject": r.get("subject") or "",
+            "body": r.get("body") or "", "status": r["status"]}
+           for r in db.get_email_log(ROW_LIMIT)]
+    return {"cold": cold, "drip": drip, "log": log}
 
 
 def create_app() -> Flask:
