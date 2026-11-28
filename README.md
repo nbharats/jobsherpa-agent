@@ -85,10 +85,21 @@ Logs go to `logs/jobsherpa.log` (a new file every midnight, 30 kept). Reports ar
 
 The Flask app has Overview, Jobs, Emails, Logs and Report pages, plus a JSON API under `/api`. A React interface (source in `dashboard/frontend`, built into `dashboard/static/react`) is served at `/app` with live refresh, sortable jobs, a trend chart and dark mode. To rebuild it: `cd dashboard/frontend; npm install; npm run build`.
 
-![Dashboard overview](docs/screenshots/email.png)
-![Dashboard overview](docs/screenshots/jobs.png)
-![Dashboard overview](docs/screenshots/logs.png)
-![Dashboard overview](docs/screenshots/report.png)
+![Jobs](docs/screenshots/jobs.png)
+![Emails, with one email expanded](docs/screenshots/emails.png)
+![Logs](docs/screenshots/logs.png)
+![Latest daily report](docs/screenshots/report.png)
+
+## Test evidence
+
+1. **Successful dry-run output**
+   ![Dry-run output](docs/screenshots/dry-run.png)
+2. **Jobs scored by the LLM, with numeric scores:** see the score table in the [report screenshot](docs/screenshots/report.png).
+3. **Sample generated cold email:** see the expanded email in the [Emails screenshot](docs/screenshots/emails.png).
+4. **Rendered HTML summary report, as received by email**
+   ![Report email](docs/screenshots/report-email.png)
+
+Automated test results for every module: [docs/test-evidence/test-results.txt](docs/test-evidence/test-results.txt)
 
 ## Project structure
 
