@@ -95,7 +95,7 @@ The Flask app has Overview, Jobs, Emails, Logs and Report pages, plus a JSON API
 1. **Successful dry-run output**
    ![Dry-run output](docs/screenshots/dry-run.png)
 2. **Jobs scored by the LLM, with numeric scores:** see the score table in the [report screenshot](docs/screenshots/report.png).
-3. **Sample generated cold email:** see the expanded email in the [Emails screenshot](docs/screenshots/emails.png).
+3. **Sample generated cold email:** see the expanded email in the [Emails screenshot](docs/screenshots/email.png).
 4. **Rendered HTML summary report, as received by email**
    ![Report email](docs/screenshots/report-email.png)
 
